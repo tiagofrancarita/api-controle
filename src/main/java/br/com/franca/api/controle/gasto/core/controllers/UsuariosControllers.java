@@ -13,6 +13,9 @@ import java.util.List;
 
 /**
  * Classe responsável por controlar as requisições de usuários
+ * @autor Tiago Franca
+ * @since 1.0
+ * @version 1.0
  */
 
 @RestController
@@ -31,7 +34,7 @@ public class UsuariosControllers {
         return new ResponseEntity<>(usuariosDto, HttpStatus.CREATED);
     }
 
-    @GetMapping("/listarUsuarios")
+    @GetMapping("")
     private List<Usuario> listarUsuarios() throws Exception {
 
         return usuarioService.listarUsuarios();

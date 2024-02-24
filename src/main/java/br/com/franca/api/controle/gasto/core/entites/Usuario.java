@@ -18,6 +18,8 @@ import java.util.List;
 
 /**
  * Entidade que representa a tabela de usuários no banco de dados
+ *
+ *
  */
 
 
@@ -52,7 +54,7 @@ public class Usuario implements Serializable, UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "CHAR(1)")
-    private StatusEnum status = StatusEnum.ATIVO;
+    private StatusEnum status = StatusEnum.A;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Temporal(TemporalType.TIMESTAMP)
@@ -85,6 +87,7 @@ public class Usuario implements Serializable, UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, columnDefinition = "VARCHAR(255)")
     private RoleEnum role;
+
 
 
     @Override

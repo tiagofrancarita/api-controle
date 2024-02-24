@@ -8,6 +8,7 @@ import br.com.franca.api.controle.gasto.core.services.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 /**
  * Classe de implementação dos métodos de serviço de usuário
+ * implementa a interface UsuarioService
  */
 
 @Service
@@ -25,12 +27,19 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * Método que salva um usuário
+     * @param usuariosDto
+     * @return
+     * @throws Exception
+     */
     @Override
     public UsuariosDto salvarUsuario(UsuariosDto usuariosDto) throws Exception {
-
         try {
             log.info("-----------------Cadastro de usuários-----------------");
-
             log.info("-----------------Iniciando o processo de cadastro de usuário-----------------");
 
             // Validar login e e-mail
@@ -46,26 +55,26 @@ public class UsuarioServiceImpl implements UsuarioService {
 
             log.info("-----------------Validação dos dados realizada com sucesso-----------------");
 
-            // Criar o objeto Usuario a partir do DTO
-            Usuario usuarioEntity = criarUsuarioAPartirDto(usuariosDto);
+            var senhaCriptografada = passwordEncoder.encode(usuariosDto.senha());
 
-            // Calcular a data de expiração da senha (90 dias a partir da data de cadastro)
+            Usuario usuarioEntity = criarUsuarioAPartirDto(usuariosDto);
+            usuarioEntity.setSenha(senhaCriptografada);
             LocalDateTime dataExpiracaoSenha = usuarioEntity.getDataCadastro().plusDays(90);
             usuarioEntity.setDataExpiracaoSenha(dataExpiracaoSenha);
             usuarioEntity.setNumeroTentativas(0);
-            usuarioEntity.setStatus(StatusEnum.ATIVO);
+            usuarioEntity.setStatus(StatusEnum.A);
+            usuarioEntity.setDataCadastro(LocalDateTime.now());
 
             // Salvar o usuário no banco de dados
             usuarioEntity = usuarioRepository.save(usuarioEntity);
 
-            log.info("-----------------Cadastro realizado com sucesso-----------------");
-
+            // Inclua a senha criptografada na resposta
             return new UsuariosDto(
                     usuarioEntity.getId(),
                     usuarioEntity.getNome(),
                     usuarioEntity.getEmail(),
                     usuarioEntity.getLogin(),
-                    usuarioEntity.getSenha(),
+                    senhaCriptografada, // Incluindo a senha criptografada na resposta
                     usuarioEntity.getConfirmaSenha(),
                     usuarioEntity.getStatus(),
                     usuarioEntity.getDataCadastro(),
@@ -82,8 +91,13 @@ public class UsuarioServiceImpl implements UsuarioService {
             log.error("-----------------Erro ao cadastrar usuário-----------------", e);
             throw new Exception("Erro ao cadastrar usuário");
         }
-}
+    }
 
+    /**
+     * Método que lista todos usuários cadastrados
+     * @return List<Usuario>
+     * @throws Exception
+     */
     @Override
     public List<Usuario> listarUsuarios() throws Exception {
         log.info("-----------------Iniciando a Listagem de usuários-----------------");
@@ -98,17 +112,33 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarios;
     }
 
-
+    /**
+     * Método que valida se um login ja existe
+     * @param login
+     * @return Usuario
+     * @throws Exception
+     */
     private boolean loginExistente(String login) {
         Optional<Usuario> usuario = usuarioRepository.validaLogin(login);
         return usuario.isPresent();
     }
 
+    /**
+     * Método que valida se um e-mail ja existe
+     * @param login
+     * @return Usuario
+     * @throws Exception
+     */
     private boolean emailExistente(String login) {
         Optional<Usuario> usuario = usuarioRepository.validaEmail(login);
         return usuario.isPresent();
     }
 
+    /**
+     * Método que cria um objeto Usuario a partir de um DTO
+     * @param usuariosDto
+     * @return Usuario
+     */
 
     private Usuario criarUsuarioAPartirDto(UsuariosDto usuariosDto) {
         return new Usuario(
