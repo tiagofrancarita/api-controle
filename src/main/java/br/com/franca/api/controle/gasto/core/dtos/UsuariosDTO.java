@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 /**
  * DTO que representa a tabela de usuários no banco de dados
  *
+ *
  */
-
-public record UsuariosDto(
+public record UsuariosDTO(
 
         String id,
         String nome,
@@ -30,5 +30,5 @@ public record UsuariosDto(
 
 
 ) {
-}
+    }
 
