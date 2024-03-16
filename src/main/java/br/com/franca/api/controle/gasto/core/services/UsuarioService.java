@@ -1,7 +1,8 @@
 package br.com.franca.api.controle.gasto.core.services;
 
-import br.com.franca.api.controle.gasto.core.dtos.UsuariosDto;
+import br.com.franca.api.controle.gasto.core.dtos.UsuariosDTO;
 import br.com.franca.api.controle.gasto.core.entites.Usuario;
+import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 /**
@@ -10,15 +11,13 @@ import java.util.List;
  * @since 1.0
  * @version 1.0
  * @see Usuario
- * @see UsuariosDto
+ * @see UsuariosDTO
  */
 
 
 public interface UsuarioService {
 
-
-     UsuariosDto salvarUsuario(UsuariosDto usuariosDto) throws Exception;
-
+     ResponseEntity<Usuario> salvarUsuario(Usuario usuario) throws Exception;
      List<Usuario> listarUsuarios() throws Exception;
 
 }

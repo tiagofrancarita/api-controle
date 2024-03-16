@@ -3,6 +3,8 @@ package br.com.franca.api.controle.gasto.core.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -28,6 +30,7 @@ public class SecurityConfiguration {
                         authoriza -> authoriza
                                 .requestMatchers(HttpMethod.GET,"/v1/usuarios").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST,"/v1/usuarios/salvarUsuario").permitAll()
+                                .requestMatchers(HttpMethod.POST,"/v1/auth/logar").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }
@@ -37,7 +40,11 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
 
+        return authenticationConfiguration.getAuthenticationManager();
 
-
+    }
 }

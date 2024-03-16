@@ -1,6 +1,5 @@
 package br.com.franca.api.controle.gasto.core.controllers;
 
-import br.com.franca.api.controle.gasto.core.dtos.UsuariosDto;
 import br.com.franca.api.controle.gasto.core.entites.Usuario;
 import br.com.franca.api.controle.gasto.core.services.UsuarioService;
 import org.slf4j.Logger;
@@ -28,10 +27,11 @@ public class UsuariosControllers {
     private UsuarioService usuarioService;
 
     @PostMapping("/salvarUsuario")
-    private ResponseEntity<UsuariosDto> salvarUsuario(@RequestBody UsuariosDto usuariosDto) throws Exception {
+    private ResponseEntity<Usuario> salvarUsuario(@RequestBody Usuario usuario) throws Exception {
 
-        usuarioService.salvarUsuario(usuariosDto);
-        return new ResponseEntity<>(usuariosDto, HttpStatus.CREATED);
+        usuarioService.salvarUsuario(usuario);
+
+        return new ResponseEntity<>(usuario, HttpStatus.CREATED);
     }
 
     @GetMapping("")

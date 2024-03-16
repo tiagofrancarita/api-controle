@@ -3,8 +3,6 @@ package br.com.franca.api.controle.gasto.core.dtos;
 
 import br.com.franca.api.controle.gasto.core.enums.RoleEnum;
 import br.com.franca.api.controle.gasto.core.enums.StatusEnum;
-
-
 import java.time.LocalDateTime;
 
 /**
@@ -12,7 +10,7 @@ import java.time.LocalDateTime;
  *
  *
  */
-public record UsuariosDto(
+public record UsuariosDTO(
 
         String id,
         String nome,

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -28,6 +27,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+
 public class Usuario implements Serializable, UserDetails {
 
     private static final long serialVersionUID = 1L;
@@ -56,7 +56,7 @@ public class Usuario implements Serializable, UserDetails {
     @Column(name = "status", nullable = false, columnDefinition = "CHAR(1)")
     private StatusEnum status = StatusEnum.A;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "data_cadastro", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime dataCadastro = LocalDateTime.now();
