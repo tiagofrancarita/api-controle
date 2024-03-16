@@ -8,9 +8,9 @@ package br.com.franca.api.controle.gasto.core.enums;
 
 public enum StatusEnum {
 
-    ATIVO("A"),
-    INATIVO("I"),
-    BLOQUEADO("B");
+    A("ATIVO"),
+    I("INATIVO"),
+    B("BLOQUEADO");
 
     private String status;
 

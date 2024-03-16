@@ -1,6 +1,5 @@
 package br.com.franca.api.controle.gasto.core.services.implementations;
 
-import br.com.franca.api.controle.gasto.core.dtos.UsuariosDto;
 import br.com.franca.api.controle.gasto.core.entites.Usuario;
 import br.com.franca.api.controle.gasto.core.enums.StatusEnum;
 import br.com.franca.api.controle.gasto.core.repositories.UsuarioRepository;
@@ -8,13 +7,17 @@ import br.com.franca.api.controle.gasto.core.services.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Classe de implementação dos métodos de serviço de usuário
+ * implementa a interface UsuarioService
  */
 
 @Service
@@ -25,65 +28,81 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * Método que salva um usuário
+     * @param usuario
+     * @return
+     * @throws Exception
+     */
     @Override
-    public UsuariosDto salvarUsuario(UsuariosDto usuariosDto) throws Exception {
+    public ResponseEntity<Usuario> salvarUsuario(@RequestBody Usuario usuario) throws Exception {
+        log.info("-----------------Cadastro de usuários-----------------");
+        log.info("-----------------Iniciando o processo de cadastro de usuário-----------------");
 
-        try {
-            log.info("-----------------Cadastro de usuários-----------------");
+        // Validar login e e-mail
+        validarUsuario(usuario);
 
-            log.info("-----------------Iniciando o processo de cadastro de usuário-----------------");
+        log.info("-----------------Validação dos dados realizada com sucesso-----------------");
 
-            // Validar login e e-mail
-            if (loginExistente(usuariosDto.login())) {
-                log.error("----------------- Login já existente -----------------");
-                throw new Exception("----------------- Login já existente -----------------");
-            }
+        log.info("-----------------Criptografando a senha-----------------");
+        criptografarSenha(usuario);
 
-            if (emailExistente(usuariosDto.email())) {
-                log.error("----------------- E-mail já existente -----------------");
-                throw new Exception("----------------- E-mail já existente -----------------");
-            }
+        configurarDadosUsuario(usuario);
 
-            log.info("-----------------Validação dos dados realizada com sucesso-----------------");
+        log.info("-----------------Salvando usuário-----------------");
 
-            // Criar o objeto Usuario a partir do DTO
-            Usuario usuarioEntity = criarUsuarioAPartirDto(usuariosDto);
+        usuario = usuarioRepository.save(usuario);
 
-            // Calcular a data de expiração da senha (90 dias a partir da data de cadastro)
-            LocalDateTime dataExpiracaoSenha = usuarioEntity.getDataCadastro().plusDays(90);
-            usuarioEntity.setDataExpiracaoSenha(dataExpiracaoSenha);
-            usuarioEntity.setNumeroTentativas(0);
-            usuarioEntity.setStatus(StatusEnum.ATIVO);
-
-            // Salvar o usuário no banco de dados
-            usuarioEntity = usuarioRepository.save(usuarioEntity);
-
-            log.info("-----------------Cadastro realizado com sucesso-----------------");
-
-            return new UsuariosDto(
-                    usuarioEntity.getId(),
-                    usuarioEntity.getNome(),
-                    usuarioEntity.getEmail(),
-                    usuarioEntity.getLogin(),
-                    usuarioEntity.getSenha(),
-                    usuarioEntity.getConfirmaSenha(),
-                    usuarioEntity.getStatus(),
-                    usuarioEntity.getDataCadastro(),
-                    usuarioEntity.getDataBloqueio(),
-                    usuarioEntity.getDataDesbloqueio(),
-                    usuarioEntity.getDataInativacao(),
-                    usuarioEntity.getDataReativacao(),
-                    usuarioEntity.getDataExpiracaoSenha(),
-                    usuarioEntity.getNumeroTentativas(),
-                    usuarioEntity.getRole()
-            );
-
-        } catch (Exception e) {
-            log.error("-----------------Erro ao cadastrar usuário-----------------", e);
-            throw new Exception("Erro ao cadastrar usuário");
+        if (usuario.getId() != null) {
+            log.info("-----------------Usuario Cadastrado-----------------");
+            return new ResponseEntity<>(usuario, HttpStatus.CREATED);
+        } else {
+            log.error("-----------------Erro ao cadastrar usuário-----------------");
+            throw new Exception("-----------------Erro ao cadastrar usuário-----------------");
         }
-}
+    }
 
+    private void validarUsuario(Usuario usuario) throws Exception {
+        if (usuario == null) {
+            log.error("-----------------Usuário nulo-----------------");
+            throw new Exception("-----------------Usuário nulo-----------------");
+        }
+
+        if (usuario.getId() == null && usuarioRepository.existeLogin(usuario.getLogin()) != null) {
+            log.error("-----------------Usuário já cadastrado com esse login, LOGIN: " + usuario.getLogin() + "-----------------");
+            throw new Exception("-----------------Usuário já cadastrado com esse login, LOGIN: " + usuario.getLogin() + "-----------------");
+        }
+
+        if (usuario.getId() == null && usuarioRepository.existeEmail(usuario.getEmail()) != null) {
+            log.error("-----------------Usuário já cadastrado com esse e-mail, E-MAIL: " + usuario.getEmail() + "-----------------");
+            throw new Exception("-----------------Usuário já cadastrado com esse e-mail, E-MAIL: " + usuario.getEmail() + "-----------------");
+        }
+    }
+
+    private void criptografarSenha(Usuario usuario) {
+        var senhaCriptografada = passwordEncoder.encode(usuario.getSenha());
+        usuario.setSenha(senhaCriptografada);
+        log.info("-----------------Senha criptografada----------------- SENHA: " + usuario.getSenha());
+    }
+
+    private void configurarDadosUsuario(Usuario usuario) {
+
+        usuario.setDataCadastro(LocalDateTime.now());
+        LocalDateTime dataExpiracaoSenha = usuario.getDataCadastro().plusDays(90);
+        usuario.setDataExpiracaoSenha(dataExpiracaoSenha);
+
+        usuario.setNumeroTentativas(0);
+        usuario.setStatus(StatusEnum.A);
+    }
+
+    /**
+     * Método que lista todos usuários cadastrados
+     * @return List<Usuario>
+     * @throws Exception
+     */
     @Override
     public List<Usuario> listarUsuarios() throws Exception {
         log.info("-----------------Iniciando a Listagem de usuários-----------------");
@@ -96,38 +115,5 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         return usuarios;
-    }
-
-
-    private boolean loginExistente(String login) {
-        Optional<Usuario> usuario = usuarioRepository.validaLogin(login);
-        return usuario.isPresent();
-    }
-
-    private boolean emailExistente(String login) {
-        Optional<Usuario> usuario = usuarioRepository.validaEmail(login);
-        return usuario.isPresent();
-    }
-
-
-    private Usuario criarUsuarioAPartirDto(UsuariosDto usuariosDto) {
-        return new Usuario(
-                usuariosDto.id(),
-                usuariosDto.nome(),
-                usuariosDto.email(),
-                usuariosDto.login(),
-                usuariosDto.senha(),
-                usuariosDto.confirmaSenha(),
-                usuariosDto.status(),
-                usuariosDto.dataCadastro(),
-                usuariosDto.dataBloqueio(),
-                usuariosDto.dataDesbloqueio(),
-                usuariosDto.dataInativacao(),
-                usuariosDto.dataReativacao(),
-                usuariosDto.dataExpiracaoSenha(),
-                usuariosDto.numeroTentativas(),
-                usuariosDto.role()
-
-        );
     }
 }
