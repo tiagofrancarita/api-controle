@@ -16,7 +16,7 @@ import java.util.List;
  * @since 1.0
  * @version 1.0
  */
-
+@CrossOrigin(origins = "http://localhost:4200") // Substitua "http://localhost:4200" pelo URL do seu frontend Angular
 @RestController
 @RequestMapping("v1/usuarios")
 public class UsuariosControllers {
@@ -34,8 +34,10 @@ public class UsuariosControllers {
         return new ResponseEntity<>(usuario, HttpStatus.CREATED);
     }
 
-    @GetMapping("")
+    @GetMapping("/listarUsuarios")
     private List<Usuario> listarUsuarios() throws Exception {
+
+        log.info("Listando usuários");
 
         return usuarioService.listarUsuarios();
 
