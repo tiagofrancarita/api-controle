@@ -108,6 +108,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         log.info("-----------------Iniciando a Listagem de usuários-----------------");
 
         List<Usuario> usuarios = usuarioRepository.findAll();
+        System.out.println(usuarios);
 
         if (usuarios.isEmpty()) {
             log.error("-----------------Nenhum usuário cadastrado-----------------");

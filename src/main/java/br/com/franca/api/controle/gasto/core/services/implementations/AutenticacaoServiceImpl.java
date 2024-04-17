@@ -6,6 +6,9 @@ import br.com.franca.api.controle.gasto.core.repositories.UsuarioRepository;
 import br.com.franca.api.controle.gasto.core.services.AutenticacaoService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,66 +42,50 @@ public class AutenticacaoServiceImpl implements AutenticacaoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    private Logger log = LoggerFactory.getLogger(AutenticacaoServiceImpl.class);
-
-
-
-    /**
-     * Método que busca um usuário pelo login
-     * @param username
-     * @return
-     * @throws UsernameNotFoundException
-     */
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-        log.info("------------------------------- Buscando usuário pelo login: {}-----------------------", " LOGIN: " + username);
-
-        return usuarioRepository.findByLogin(username);
+    public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
+        return usuarioRepository.findByLogin(login);
     }
 
+
     @Override
-    public String gerarToken(AuthDTO authDTO) {
-
-      Usuario usuario = usuarioRepository.findByLogin(authDTO.login());
-
-        return gerarTokenJWT(usuario);
+    public String obterToken(AuthDTO authDto) {
+        Usuario usuario = usuarioRepository.findByLogin(authDto.login());
+        return geraTokenJwt(usuario);
     }
 
-    public String gerarTokenJWT(Usuario usuario) {
-
+    public  String geraTokenJwt(Usuario usuario) {
         try {
-            log.info("------------------------------- Gerando token JWT para o usuário: {}-----------------------", usuario.getLogin());
+            Algorithm algorithm = Algorithm.HMAC256("my-secret");
 
-            Algorithm algorithm = Algorithm.HMAC256(SECRET);
-
-            String jwt = JWT.create()
-                    .withIssuer("API Controle de Gastos")
-                    .withExpiresAt(gerarExpiracaoToken())
+            return JWT.create()
+                    .withIssuer("auth-api")
                     .withSubject(usuario.getLogin())
-                    .withClaim("role", usuario.getRole().name())
-                    .withClaim("id", usuario.getId())
+                    .withExpiresAt(geraDataExpiracao())
                     .sign(algorithm);
-
-            String token = TOKEN_PREFIX + " " + jwt;
-
-            log.info("------------------------------- Token JWT gerado com sucesso para o usuário: {}-----------------------", usuario.getLogin());
-
-
-            //return "{\"Authorization\": \"" + token + "\"}";
-
-            return token;
-
-        } catch (Exception e) {
-            log.error("Erro ao gerar token JWT: {}", e.getMessage());
-            throw new RuntimeException("Erro ao gerar token");
+        } catch (JWTCreationException exception) {
+            throw new RuntimeException("Erro ao tentar gerar o token! " +exception.getMessage());
         }
     }
 
+    @Override
+    public String validaTokenJwt(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256("my-secret");
 
-    private Instant gerarExpiracaoToken() {
+            return JWT.require(algorithm)
+                    .withIssuer("auth-api")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+
+        } catch (JWTVerificationException exception) {
+            return "";
+        }
+    }
+    private Instant geraDataExpiracao() {
         return LocalDateTime.now()
-                .plusSeconds(EXPIRATION_TIME)
+                .plusHours(8)
                 .toInstant(ZoneOffset.of("-03:00"));
     }
 }
