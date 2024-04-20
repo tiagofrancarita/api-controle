@@ -56,12 +56,10 @@ public class SecurityFilter extends OncePerRequestFilter {
             return null;
         }
 
-        String[] authParts = authHeader.split(" ");
-        if (authParts.length < 2 || !authParts[0].equals("Bearer")) {
+        if (!authHeader.split(" ")[0].equals("Bearer")) {
             return null;
         }
-
-        return authParts[1];
+        return authHeader.split(" ")[1];
     }
 
     private void liberacaoCors(HttpServletResponse response){
